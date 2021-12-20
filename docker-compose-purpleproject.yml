@@ -1,0 +1,37 @@
+version: "3" 
+services:
+  web_purpleproject:
+    image: alexrogna/purpleproject_web:prod
+    expose:
+      - 3000
+    env_file:
+      - .env/production/database_purpleproject
+      - .env/production/web_purpleproject
+    environment:
+      - VIRTUAL_HOST=purpleproject.alexrogna.com
+      - VIRTUAL_PORT=3000
+      - LETSENCRYPT_HOST=purpleproject.alexrogna.com
+    networks:
+      - proxy
+    restart: always
+
+  database_purpleproject:
+    image: postgres
+    env_file:
+      - .env/production/database_purpleproject
+    volumes:
+      - db_data_purpleproject:/var/lib/postgresql/data
+    networks:
+      - proxy
+    restart: always
+    
+  db-migrator_purpleproject:
+    image: alexrogna/purpleproject_web:prod
+    command: ["./wait-for", "--timeout=300", "database_purpleproject:5432", "--", "bin/rails", "db:create" , "db:migrate"]
+    env_file:
+      - .env/production/database_purpleproject
+      - .env/production/web_purpleproject
+volumes:
+  db_data_purpleproject:
+networks:
+  proxy:
